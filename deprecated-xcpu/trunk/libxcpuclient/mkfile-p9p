@@ -1,0 +1,30 @@
+<$PLAN9/src/mkhdr
+
+CFLAGS=-Dp9p
+
+LIB=libmntclient.a$O
+LIB9P=libninepclient.a$O
+
+OFILES=mntclient.$O ip.$O
+9POFILES=ninepclient.$O
+
+HFILES=\
+	mntclient.h\
+	ninepclient.h\
+
+CLEANFILES=$CLEANFILES $LIB $LIB9P
+
+<$PLAN9/src/mklib
+
+default:V:	$LIB $LIB9P
+
+$LIB(%):N: %
+$LIB:	${OFILES:%=$LIB(%)}
+	$AR rvs $LIB $newmember
+
+$LIB9P(%):N: %
+$LIB9P:	${9POFILES:%=$LIB9P(%)}
+	$AR rvs $LIB9P $newmember
+
+all install:V:	$LIB9P $LIB
+

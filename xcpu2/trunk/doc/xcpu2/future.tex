@@ -1,0 +1,88 @@
+%
+% This is pretty rough, and I'm pretty much coming up with it as I go
+% maybe we'd be better off just stating the problem (and incorporating
+% the problem of virtual machines and cloud environments as well).
+% I may take a second pass at this once I've had a chance to sleep on it.
+%
+
+Emerging hybrid computing models such as NVIDIA's 
+CUDA~\cite{cuda}, the Roadrunner supercomputer, and the PowerXcell hypernodes
+require additional support from the XCPU environment to support resource 
+reservation, monitoring, and control.  Some early attempts ~\cite{cellfs} have been
+made to extend synthetic file system control and monitoring of such environments
+-- but it is our belief that a more tightly integrated model would benefit clusters in
+which such hybrid accelerators are present.
+
+Such additional facilities may be provided by synthetic file system plug-ins.  The
+naturally extensible nature of synthetic file system hierarchies should allow these
+hybrid systems and their control interfaces to co-exist with more conventional
+environments.  In this way, monitoring utilities and job schedulers can have a
+single interface to obtain information about all aspects of the hybrid system.  A
+similar approach could be taken for virtual environments, deepening the hierarchy
+of control interfaces to allow control interfaces for the node, virtual  machine instance,
+and associated accelerators.
+
+The XCPU and XCPU2 model both take a broadcast approach to standard I/O -- 
+that is to say that stdin is replicated and broadcast to all remote threads of a 
+session and stdout response is aggregated back to the initiating thread.
+This works great for many applications where standard I/O is primarily used
+for monitoring, but emerging cluster environments ~\cite{push} may wish to
+choose different options.  For example, XCPU2 could be used to fan-out
+worker nodes for map/reduce type problems.  In such scenario's standard I/O
+could be used to issue unique instructions to each worker node and gather 
+responses -- or it may even be desirable to route standard out from one worker
+node to another.  Extending XCPU2 to allow the use of standard I/O as per node
+communication paths would facilitate such environments.   Additional
+communication channels could be brokered, perhaps even for inter-worker
+communication obviating the need for additional message passing infrastructure.
+
+The use of the unshare system call, together with bind operations limits XCPU2
+operation to Linux or Plan 9 back-end systems.  Such facilitates do not currently
+exist on other operating systems such as MacOSX, BSD, or Windows.  One
+possibility would be to use an intermediary who could compose dynamic 
+private namespaces and export the pre-composed namespace to the operating
+system providing the XCPUfs service.  Private namespace could be provided by
+chrooting to a sandbox based on this pre-composed namespace.
+% Does windows have the concept of a chroot?
+The hosted version of the Inferno operating system has sufficient functionality
+to provide this service on a variety of platforms, and could export the precomposed
+namespace as a 9P file system which could be mounted by MacFUSE or v9fs.
+This could also open up the opportunity of using Inferno-based authentication
+servers and encryption technologies which would further secure the environment.
+
+An obvious area for improvement are optimizations in data flow.  While we
+support caching accessed elements of the user's file system within the 
+cluster, often times the user is actually accessing data in a parallel file
+system which is mounted on both his desktop and the cluster.  In this
+scenario routing all file system traffic through his desktop node becomes
+a bottleneck.  This scenario can be overcome with proper manipulation of the
+namespace configuration, however it is desirable for the system to be able
+to automatically identify and optimize for such transitive file system
+mount operations.
+
+Furthermore, since many of the nodes within the cluster will be caching
+similar data, a peer-caching policy where nodes check with their peers 
+before going to the file system origin is also desirable.  Configuration
+for this sort of scenario will likely be tightly coupled to the topology of
+the underlying high performance interconnect.  In order to ease administration,
+it would be desirable if characteristics of the high performance interconnect
+could be discovered by the system instead of explicitly defined by the end
+user.
+
+A less performance critical aspect of the cluster configuration is the 
+initial node discovery process.  XCPU2 still relies on static configuration
+files for identifying members of the cluster.  A more dynamic environment
+with autodiscovery and configuration using zeroconf~\cite{zeroconf} would
+greatly simplify creation of ad-hoc clusters.  Provisions for hierarchical
+discovery would also be nice to accommodate environments with multiple hidden
+levels of network (such as systems behind NATs, alternate network gateways, 
+etc.)
+
+Such richer network environments will also require a change to how XCPU
+servers mount the client's environment.  Right now, a back-mount is 
+initiated through the namespace file.  In order to traverse network
+boundaries and barriers such as NAT devices cleanly, it would be preferable
+for a single connection to be used to both initiate computation and provide
+the reverse mount.  This is the method used by the Plan 9 cpu(1) and Inferno
+rcmd(1) mechanisms.
+

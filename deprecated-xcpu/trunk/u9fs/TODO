@@ -1,0 +1,5 @@
+o redo error reporting - use well defined error strings and errno
+o performance tuning (zero copy?)
+o security
+
+

@@ -1,0 +1,118 @@
+% emerging environment
+Large scale cluster computing is becoming more and more mainstream
+in today's environment.  Multiple vendors have introduced models for
+offering computation as a service~\cite{ec2}~\cite{azure}~\cite{appengine},
+providing on demand access to cluster computation resources for
+dollars a day.  Additionally, hardware costs driven by economies of scale 
+are increasingly favoring large clusters of low-cost, loosely coupled 
+scale-out systems instead of comparatively expensive large scale-up 
+SMP servers.  This sort of scale out configuration has been used in 
+the realm of high performance computing (HPC) for many years.
+
+A typical HPC cluster has a large number of compute nodes and a single
+control/head node. They often use a parallel file system, that runs on 
+a separate set of nodes, usually physically separated from the rest of the 
+cluster. 
+The control node is used to run the software that monitors the cluster 
+health, the job scheduler that is used for scheduling and executing jobs 
+as well as the compute node booting service. 
+In most cases the compute nodes do not have
+local disks, or if they do, they are only used for scratch space and don't
+have an operating system installed. 
+The compute nodes receive the operating system kernel and disk image over 
+the network and store their file system in the node's RAM. 
+
+In order to save memory and improve the boot time, 
+system images are tens-to-hundreds of megabytes large and contain only the
+most commonly used libraries and tools. Most of the cluster installations
+support a single system image that is running on all compute nodes. Adding
+new software, or upgrading the existing one is a complex task that requires
+coordination between the cluster support group and all teams that use the
+cluster. Upgrading a library required to run a new scientific code can take
+weeks or months. The overhead and the time required for the coordination
+makes it hard for groups to share clusters.
+
+% desired user experience in this new era
+The constrained nature of these cluster system images causes issues for
+application developers who are used to developing code on a desktop or
+workstation with a larger set of tools, scripting languages, and 
+visualization tools which aren't available on the cluster.
+End-users expect their cluster nodes to have the same environment 
+as their local workstations including windowing systems, graphical 
+integrated development environments (IDE), multiple scripting languages,
+and a familiar file system and shell environment.  In many cases, end users
+would prefer to be able to develop and launch jobs from their workstation,
+and be able to use local tools and scripts to monitor and manipulate the
+remote run.  They would prefer to be able to do all of this without
+worrying about compatibility with the remote system image, using the 
+cluster as a transparent computation accelerator.
+
+% the unfortunate current state of affairs
+In order to develop applications for the cluster, end-users are forced
+to either use the same constrained software image on their workstation
+or have a dedicated development server which matches the cluster configuration
+to ensure that the application will execute correctly on the cluster.  While
+the mainstream availability of virtualization tools have eased the pain of
+maintaining separate development systems somewhat -- many end users are
+unsatisfied with the limited software and tools in such environments.
+Because the cluster environment differs so radically from their desktop
+environment, it is difficult for developers to construct cohesive environments
+which allows visualization and control to run locally while computation
+runs remotely.  The result is most cluster systems resemble the same
+batch-oriented runtimes which date back to card-punch-era computing instead
+of the rich interactive visual environments many users have become accustomed
+to on single node systems.
+
+% plan 9 approach - maybe we want more here and less in related work?
+The Plan 9~\cite{pike95plan} research operating system sought to address
+these problems by creating a comprehensive approach to cluster 
+computing which allowed organization of local and remote resources in
+such a way that access to distributed resources (including computation)
+was transparent.  Several years ago, LANL and IBM collaborated on v9fs
+~\cite{graverobbers}, a port of the Plan 9 resource sharing protocol,
+9P~\cite{9p}, to mainstream Linux.
+LANL proceeded to bring Plan 9 style remote process management to UNIX
+systems with their XCPU project~\cite{ron-xcpu}.
+
+% opportunity overview
+XCPU solved a portion of the cluster application environment problem
+by identifying executable dependencies (such as dynamic libraries) and 
+pushing them from the end-user node to the cluster nodes.  However,
+non-executable dependencies such as scripts, configuration files, and
+data were not automatically identified and would have to be present
+on the cluster node's file system.  This problem was solved in Plan 9
+through the use of the 9P resource sharing protocol coupled with Plan 9's
+model of dynamic private namespaces~\cite{namespace}.  Recent additions
+to the Linux kernel, including v9fs, bind mounts, and per-process 
+private namespace~\cite{linuxns} present the opportunity to recreate this 
+facility on mainstream Linux systems.
+
+% paper summary
+In this paper we introduce XCPU2, an evolution of our previous
+XCPU work to provide a more complete execution offload mechanism
+for Linux which is closer in capability to the Plan 9 based mechanisms.
+XCPU2 allows the user to configure the view of the filesystem that will be
+used when the job is run. It uses Linux support of private namespaces and
+provides each job with its own filesystem view. XCPU2 allows parts of the
+original filesystem to be ``bound'' to other locations and remote filesystems
+to be mounted directly on the back-end cluster node. 
+In the XCPU2 cluster model, the control node is used to
+allocate nodes for a job, but the job control can be performed from any
+other computer, including the user's desktop. In addition to controlling the
+running job, the client-side tools export the filesystem of the controlling
+computer, so it can be mounted and used by the compute nodes assigned for
+the job. By using a filesystem configuration, all compute nodes can be
+configured to have file system that is identical to the user desktop.
+
+When a single application is run on multiple nodes, it is very likely that
+the nodes will access the same files. All nodes will run the same
+executable, use the same shared libraries and read the same configuration
+files. Caching mechanisms that use that fact would have a much better
+hit-to-miss ratio than the general-purpose ones. XCPU2 currently provides a
+simple read-only hierarchical caching model in order to improve the performance.
+
+In the next section we discuss related and past efforts dealing with cluster
+execution frameworks.  Section 3 covers XCPU2's operation and interfaces.
+We discuss our experiences deploying XCPU2 in section 4 and present a
+performance evaluation in Section 5.  Section 6 contains our current
+directions for future work and we conclude in Section 7.

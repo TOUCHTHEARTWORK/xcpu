@@ -1,0 +1,17 @@
+SYSNAME=`uname`
+OBJTYPE=`uname -m | sed '
+    s;i.86;386;;
+    s;amd64;x86_64;;
+    s;/.*;;;
+    s; ;;g;
+    s;armv4l;arm;g;
+    s;PowerMacintosh;power;g;
+    s;macppc;power;g;
+    s;ppc64;power;g;
+    s;ppc;power;g'`
+
+CONF=`uname |awk '{if($1 == "Plan") {print "p9"} else {print "p9p"} }'`
+
+default:V:	all
+
+<mkfile-$CONF

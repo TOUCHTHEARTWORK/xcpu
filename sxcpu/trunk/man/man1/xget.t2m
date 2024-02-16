@@ -1,0 +1,76 @@
+NAME
+	xget - Transfers files in a scalable way
+
+SYNOPSIS
+	xget [-D debuglevel] [-p port] [-o] <src>
+	xget [-D debuglevel] [-p port] [-s] [-o] <-n netaddr> <remote_file | .> [remote_file] <dest | .>
+DESCRIPTION
+	xget transfers files in a manner that is very scalable. It is inteaded to be used for 
+	transfering boot images to all of the nodes in a cluster at once.  However, it can be 
+	used for transfering any file to a large number of machines at once.
+
+	xget uses the 9P file system which and uses the client/server model to distribute the file.
+
+	xget is first executed as a master server that is be started before any of the clients.  
+	xget turns some clients into servers for a period of time in order to distribute the
+	load of the master server.
+
+OPTIONS
+       Master Server Options
+
+       -D level
+              Turns on debugging messages.  Different information will be printed depending
+              of the value of level.  If level is 1, xget will print out function call
+              debugging information.  If level is 2, xget will print out 9P debugging
+              information when acting as a server.  If level is 4, xget will printout 9P
+              debugging information when acting as a client.
+
+       -p port
+              The port to listen on
+
+       -o 
+       	      Prevents xget from determining the current user.  xget will not 
+	      preserve ownership information with this option enabled. 
+
+       src
+              The file or directory to serve to all of the clients
+
+       Client Options
+
+       -D     Turn on 9P debugging messages
+
+       -p port
+              The port the master server is listening on
+
+       -s 
+              Disable permission preservation 
+
+       -o     
+              Prevents xget from determining the current user.  This
+	      also disables permission preservation.
+
+       -n netaddr
+              The ip address or hostname of the master server
+
+       remote_file | .
+              The remote file name to download or . for all files
+
+       dest | .
+              The destination of the file downloaded or . for the current directory.  If . is specified,
+              then the full pathname of the remote file will be stripped.
+
+
+EXAMPLE
+       This command will start the master server so that it will serve all files in /tmp/src.
+
+                       $ xget /tmp/src
+
+       This command will start a client with a servicetime of 30 seconds and save all the files 
+       served from the server to /tmp/dest.   This  command assumes the master server has an ip
+       address of 10.0.0.1.
+
+                       $ xget -s 30 -n 10.0.0.1 . /tmp/dest
+
+BUGS
+       Plenty.
+

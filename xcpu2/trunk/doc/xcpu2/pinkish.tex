@@ -1,0 +1,20 @@
+\subsection{The Pinkish development cluster}
+
+Pinkish is the 91-node cluster the system's research team at LANL uses for
+development and testing. The compute nodes use coreboot~\cite{coreboot}
+instead of a standard BIOS and load the OS kernel and system image over the
+Myrinet network using XGet~\cite{xget}. The root filesystem on the compute
+nodes contains only few system commands (implemented by busybox), shared
+libraries and xcpufs and xcpufs2 daemons.
+
+In addition to the head and compute nodes, we have a number of other
+servers connected to the same network running various Linux distributions.
+XCPU2 allows us to quickly simulate a particular configuration on all
+compute nodes and test for any scalability issues of the software we are
+working on. Normally we use a namespace that mounts the distribution's root
+filesystem via XCPU2's cache file server. The user directories are mounted
+from pinkish head node over NFS and we use tmpfs for temporary files on the
+nodes.
+
+This configuration is what was used to obtain the performance results
+in the next section.

@@ -1,0 +1,23 @@
+/amount.c/1.1/Thu Jun 17 03:27:35 2004//
+/amount_getkey.c/1.1/Thu Jun 17 03:27:35 2004//
+/auth_chuid.c/1.1/Thu Jun 17 03:27:35 2004//
+/auth_userpasswd.c/1.1/Thu Jun 17 03:27:35 2004//
+/authlocal.h/1.1/Thu Jun 17 03:27:35 2004//
+/httpauth.c/1.1/Thu Jun 17 03:27:35 2004//
+/login.c/1.1/Thu Jun 17 03:27:35 2004//
+/newns.c/1.1/Thu Jun 17 03:27:35 2004//
+/noworld.c/1.1/Thu Jun 17 03:27:35 2004//
+/portdate/1.1/Sun Dec 26 23:18:57 2004//
+/auth_attr.c/1.2/Sat Feb 12 05:00:08 2005//
+/auth_challenge.c/1.2/Sat Feb 12 05:00:08 2005//
+/auth_getkey.c/1.2/Sat Feb 12 05:00:08 2005//
+/auth_wep.c/1.2/Sat Feb 12 05:00:08 2005//
+/fsamount.c/1.1/Fri Feb 11 17:01:17 2005//
+/nsamount.c/1.1/Fri Feb 11 17:01:18 2005//
+/mkfile/1.5/Wed Mar 16 05:00:08 2005//
+/auth_rpc.c/1.5/Fri Jan 27 05:00:24 2006//
+/attr.c/1.3/Sun Apr  2 05:00:52 2006//
+/auth_getuserpasswd.c/1.3/Sun Apr  2 05:00:53 2006//
+/auth_proxy.c/1.4/Sun Apr  2 05:00:53 2006//
+/auth_respond.c/1.3/Sun Apr  2 05:00:53 2006//
+D

@@ -1,0 +1,6 @@
+set term post eps enhan
+set yrange [0:11]
+set out "results1.eps"
+set xlabel "Number of nodes"
+set ylabel "seconds"
+plot "results1.data" using 1:2 title "xcpu" with linespoints, "results1.data" using 1:3 title "xcpu2" with linespoints, "results1.data" using 1:5 title "pdsh ssh" with linespoints

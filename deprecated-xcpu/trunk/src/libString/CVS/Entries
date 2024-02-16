@@ -1,0 +1,20 @@
+/s_alloc.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_append.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_array.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_copy.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_grow.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_memappend.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_nappend.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_putc.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_read_line.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_reset.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_terminate.c/1.1/Thu Dec 11 18:15:57 2003//
+/s_unique.c/1.1/Thu Dec 11 18:15:57 2003//
+/mkfile/1.2/Tue Apr 20 02:28:45 2004//
+/s_parse.c/1.2/Tue Apr 20 02:28:46 2004//
+/portdate/1.1/Sun Dec 26 23:18:13 2004//
+/s_getline.c/1.2/Fri Jan 14 20:59:51 2005//
+/s_rdinstack.c/1.2/Fri Jan 14 20:59:51 2005//
+/s_tolower.c/1.2/Wed Jul 20 04:00:11 2005//
+/s_read.c/1.2/Sun Apr  2 05:00:52 2006//
+D

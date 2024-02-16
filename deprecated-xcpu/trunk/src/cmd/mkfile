@@ -1,0 +1,13 @@
+<$PLAN9/src/mkhdr
+
+TARG=`ls *.c | sed 's/\.[cy]//; s/\.lx//'`
+
+<$PLAN9/src/mkmany
+
+BUGGERED='CVS|faces|factotum|lp|ip|mailfs|page|scat|upas|vncv|mnihongo|mpm|index|u9fs|secstore'
+DIRS=`ls -l |sed -n 's/^d.* //p' |egrep -v "^($BUGGERED)$"|egrep -v '^lex$'`
+
+<$PLAN9/src/mkdirs
+
+%.o: %.tab.c
+	9c -o $target $stem.tab.c

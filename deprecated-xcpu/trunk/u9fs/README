@@ -1,0 +1,19 @@
+This is the u9fs program from the Plan 9 distribution.
+
+It is covered by the Lucent Publice License (see the LICENSE file).
+
+For more information see the Plan 9 manpages:
+	http://plan9.bell-labs.com/magic/man2html/4/u9fs
+
+Ongoing development by ericvh (ericvh AT gmail DOT com)
+
+There may be fixes and extensions present in this version, they are
+documented below:
+
+	* 9P2000.u Extended Mode
+		- numeric ids are used instead of text usernames
+		- numeric error codes are used as well as error strings
+		- support for symlinks has been added
+
+IF YOU ARE USING EXTENDED MODE YOU MUST BE USING AN UP-TO-DATE VERSION OF
+V9FS OR YOU MAY HAVE PROBLEMS.  USE AT LEAST v9fs-test10

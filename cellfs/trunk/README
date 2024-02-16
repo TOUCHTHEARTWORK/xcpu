@@ -1,0 +1,5 @@
+To compile edit CFLAGS in libspfs/Makefile to point to your location of
+libspe.
+
+doc/ contains a paper and a talk about libspe
+tests/ contains sample programs

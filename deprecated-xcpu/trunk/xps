@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# an example wrapper
+
+ARGV=$1
+
+if test -z $ARGV
+then
+	ARGV=auwx
+fi
+
+for i in /mnt/xcpu/*/xcpu/procs
+do
+	j=`echo $i | sed 's,/mnt/xcpu/,,;s,/xcpu/procs,,'`
+	./o.rx -l $j /bin/ps $ARGV | sed "s/^/$j: /"
+done

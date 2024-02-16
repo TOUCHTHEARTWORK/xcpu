@@ -1,0 +1,10 @@
+</$objtype/mkfile
+
+LIB=libmntclient.a$O
+
+OFILES=mntclient.$O
+
+HFILES=\
+	mntclient.h\
+
+</sys/src/cmd/mklib

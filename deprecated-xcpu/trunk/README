@@ -1,0 +1,11 @@
+Type:
+
+./INSTALL
+
+follow the instructions at the end, then:
+
+$ mk 
+
+on native Plan 9 just type:
+
+$ mk

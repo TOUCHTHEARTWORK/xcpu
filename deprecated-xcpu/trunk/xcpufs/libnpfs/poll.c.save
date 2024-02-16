@@ -1,0 +1,365 @@
+/*
+ * Copyright (C) 2005 by Latchesar Ionkov <lucho@ionkov.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/poll.h>
+#include <pthread.h>
+#include <errno.h>
+#include "npfs.h"
+#include "npfsimpl.h"
+
+enum {
+	TblModified	= 1,
+	Notified	= 2,
+	ChunkSize	= 4,
+};
+
+struct Nppoll {
+	pthread_mutex_t	lock;
+	int		shutdown;
+	int		pipe[2];
+	pthread_t	thread;
+	int		flags;
+	int		fdnum;
+	int		fdsize;
+	Npollfd**	npfds;
+	struct pollfd*	fds;
+	Npollfd*	pending_npfds;
+};
+
+struct Npollfd {
+	Nppoll*		np;
+	int		fd;
+	int		events;
+	int		connected;
+	void*		aux;
+	int		(*notify)(int fd, int events, void *aux);
+	struct pollfd*	pfd;
+	Npollfd*	next;	/* list of the fds pending addition */
+};
+
+
+static void* poll_proc(void *a);
+static void poll_notify(Nppoll *p);
+
+Nppoll *
+nppoll_create()
+{
+	Nppoll *np;
+
+	fprintf(stderr, "nppoll_create\n");
+	np = malloc(sizeof(*np));
+	if (!np)
+		return NULL;
+
+	pthread_mutex_init(&np->lock, NULL);
+	np->shutdown = 0;
+	np->fdnum = 1;
+	np->fdsize = ChunkSize;
+	np->npfds = calloc(np->fdsize, sizeof(Npollfd *));
+	np->fds = calloc(np->fdsize, sizeof(struct pollfd));
+	pipe(np->pipe);
+	np->flags = 0;
+
+	np->npfds[0] = NULL;
+	np->fds[0].fd = np->pipe[0];
+	np->fds[0].events = POLLIN | POLLOUT;
+	np->fds[0].revents = 0;
+	np->pending_npfds = NULL;
+	pthread_create(&np->thread, NULL, poll_proc, np);
+
+	return np;
+}
+
+void
+nppoll_destroy(Nppoll *np)
+{
+	pthread_mutex_lock(&np->lock);
+	np->shutdown = 1;
+	pthread_mutex_unlock(&np->lock);
+}
+
+Npollfd *
+nppoll_add(Nppoll *np, int fd, int events, int (*cb)(int, int, void *), void *aux)
+{
+	int flags;
+	Npollfd *npfd;
+
+	fprintf(stderr, "nppoll_add %d\n", fd);
+	npfd = malloc(sizeof(*npfd));
+	if (!npfd)
+		return NULL;
+
+	npfd->np = np;
+	npfd->fd = fd;
+	npfd->events = events;
+	npfd->connected = 1;
+	npfd->aux = aux;
+	npfd->notify = cb;
+	npfd->pfd = NULL;
+	npfd->next = NULL;
+
+	pthread_mutex_lock(&np->lock);
+	npfd->next = np->pending_npfds;
+	np->pending_npfds = npfd;
+
+	flags = np->flags & Notified;
+	np->flags = TblModified | Notified;
+	pthread_mutex_unlock(&np->lock);
+	if (!flags)
+		poll_notify(np);
+
+	return npfd;
+}
+
+void
+nppoll_remove(Nppoll *np, Npollfd *npfd)
+{
+	int flags;
+
+	fprintf(stderr, "nppoll_remove %p\n", npfd);
+	pthread_mutex_lock(&np->lock);
+	flags = np->flags;
+	npfd->connected = 0;
+	np->flags = TblModified | Notified;
+	pthread_mutex_unlock(&np->lock);
+	if (!flags&Notified)
+		poll_notify(np);
+}
+
+void
+nppoll_setevents(Npollfd *npfd, int events) 
+{
+	Nppoll *np;
+
+	fprintf(stderr, "nppoll_setevents start fd %d events %02x new %02x\n", npfd->fd, npfd->events, events);
+
+	if ((npfd->events&events) == events)
+		return;
+
+	np = npfd->np;
+	npfd->events |= events;
+
+	if (!npfd->pfd) {
+		pthread_mutex_lock(&np->lock);
+		npfd->events |= events;
+		if (npfd->pfd) {
+			npfd->pfd->events |= events;
+			fprintf(stderr, "\t+ fd %d events %02x\n", npfd->pfd->fd, npfd->pfd->events);
+		}
+		pthread_mutex_unlock(&np->lock);
+	} else
+		npfd->pfd->events |= events;
+	
+	fprintf(stderr, "nppoll_setevents end fd %d npfd events %02x fdevents %02x (%p)\n", npfd->fd, npfd->events, npfd->pfd?npfd->pfd->events:0xff, npfd->pfd);
+	poll_notify(np);
+}
+
+void
+nppoll_resetevents(Npollfd *npfd, int events)
+{
+	Nppoll *np;
+
+	fprintf(stderr, "nppoll_resetevents start fd %d events %02x new %02x\n", npfd->fd, npfd->events, events);
+	if ((npfd->events&events) == 0)
+		return;
+
+	np = npfd->np;
+	npfd->events &= ~events;
+	if (!npfd->pfd) {
+		pthread_mutex_lock(&np->lock);
+		npfd->events &= ~events;
+		if (npfd->pfd)
+			npfd->pfd->events &= ~events;
+		pthread_mutex_unlock(&np->lock);
+	} else
+		npfd->pfd->events &= ~events;
+
+//	poll_notify(np);
+}
+
+static void
+poll_update_table(Nppoll *p)
+{
+	int i, n, m;
+	struct pollfd *tfds;
+	struct Npollfd *npfd, **tnpfd, *pnpfd;
+
+	fprintf(stderr, "nppoll_update_table start\n");
+	/* get rid of the disconnected fds */
+	for(i = 1; i < p->fdnum; i++) {
+		npfd = p->npfds[i];
+		if (npfd && !npfd->connected) {
+			free(npfd);
+			npfd = p->npfds[i] = NULL;
+		}
+	}
+
+	/* try to fill the holes with pending fds */
+	for(i = 1, pnpfd = p->pending_npfds; pnpfd && i < p->fdsize; i++) {
+		npfd = p->npfds[i];
+		if (!npfd) {
+			p->npfds[i] = pnpfd;
+			p->npfds[i]->pfd = &p->fds[i];
+			p->fds[i].fd = pnpfd->fd;
+			p->fds[i].events = pnpfd->events;
+			pnpfd = pnpfd->next;
+		}
+	}
+
+	/* if there are still holes, move some elements to fill them */
+	for(n = i; i < p->fdnum; i++) {
+		npfd = p->npfds[i];
+		if (!npfd)
+			continue;
+
+		if (i != n) {
+			p->npfds[n] = p->npfds[i];
+			p->npfds[n]->pfd = &p->fds[n];
+			p->fds[n] = p->fds[i];
+			p->npfds[i] = NULL;
+		}
+		n++;
+	}
+
+	/* find out the number of still pending fds */
+	for(i = 0; pnpfd != NULL; pnpfd = pnpfd->next, i++)
+		;
+
+	/* increase the array if we have to */
+	m = n + i + ChunkSize - ((n+i)%ChunkSize);
+	if (p->fdsize < m) {
+		tfds = realloc(p->fds, sizeof(struct pollfd) * m);
+		if (tfds)
+			p->fds = tfds;
+
+		tnpfd = realloc(p->npfds, sizeof(Npollfd *) * m);
+		if (tnpfd) {
+			for(i = 1; i < n; i++)
+				tnpfd[i]->pfd = &p->fds[i];
+
+			for(i = p->fdsize; i < m; i++)
+				tnpfd[i] = NULL;
+			p->npfds = tnpfd;
+		}
+
+		if (tfds && tnpfd)
+			p->fdsize = m;
+			
+	}
+
+	/* put the remaining pending fds in place */
+	for(i = n; i < p->fdsize && pnpfd != NULL; i++, pnpfd = pnpfd->next) {
+		p->npfds[i] = pnpfd;
+		p->npfds[i]->pfd = &p->fds[i];
+		p->fds[i].fd = pnpfd->fd;
+		p->fds[i].events = pnpfd->events;
+	}
+
+	p->pending_npfds = pnpfd;
+	p->fdnum = i;
+	fprintf(stderr, "nppoll_update_table done\n");
+}
+
+static void*
+poll_proc(void *a)
+{
+	int i, n, shutdown, errors, events;
+	Nppoll *p;
+	struct pollfd *pfd;
+	struct Npollfd *npfd;
+	char buf[10];
+
+	p = a;
+	shutdown = 0;
+	while (!shutdown) {
+		fprintf(stderr, "poll_proc fdnum %d\n", p->fdnum);
+		n = poll(p->fds, p->fdnum, 10000);
+		if (p->fds[0].revents & POLLIN)
+			n--;
+
+		errors = 0;
+		for(i = 1; i<p->fdnum /*&& n*/; i++) {
+			npfd = p->npfds[i];
+			pfd = &p->fds[i];
+			if (pfd->revents) {
+				fprintf(stderr, "poll_proc fd %d events %d connected %d\n", pfd->fd, pfd->revents, npfd->connected);
+				n--;
+			}
+
+			if (!npfd || !npfd->connected) {
+				errors++;
+				continue;
+			}
+
+			if ((pfd->revents&(pfd->events | POLLERR|POLLHUP|POLLNVAL))) {
+				fprintf(stderr, ">>> fd %d revents %x events %x result %d\n", pfd->fd, pfd->revents, pfd->events, (pfd->revents&(pfd->events | POLLERR|POLLHUP|POLLNVAL)));
+				events = (*npfd->notify)(npfd->fd, pfd->revents, npfd->aux);
+				if (events && events != pfd->events) {
+					pfd->events = events;
+					npfd->events = events;
+				}
+			}
+
+/*
+			if (pfd->revents&(POLLERR|POLLHUP|POLLNVAL) 
+			&& !(pfd->revents&(POLLIN|POLLOUT))) {
+				errors++;
+				npfd->connected = 0;
+			}
+*/
+
+			pfd->events = npfd->events;
+
+		}
+
+		if (errors || p->fds[0].revents & POLLIN) {
+			fprintf(stderr, "poll_proc notified %d %p\n", p->fds[1].events, &p->fds[1]);
+			pthread_mutex_lock(&p->lock);
+			shutdown = p->shutdown;
+			if (p->fds[0].revents & POLLIN)
+				n = read(p->pipe[0], buf, sizeof(buf));
+
+			if (p->flags&TblModified || errors)
+				poll_update_table(p);
+			p->flags = 0;
+			pthread_mutex_unlock(&p->lock);
+		}
+	}
+
+	free(p);
+	return NULL;
+}
+
+static void
+poll_notify(Nppoll *p)
+{
+	int n;
+	char *buf = "";
+
+	fprintf(stderr, "poll_notify\n");
+	n = write(p->pipe[1], buf, 1);
+}

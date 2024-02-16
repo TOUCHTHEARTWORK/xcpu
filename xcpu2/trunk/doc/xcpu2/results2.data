@@ -1,0 +1,10 @@
+# 1 MB binary, total files transferred 2.93 MB
+# tree-spawn with 8 children per node
+#
+# Nodes		xcpu		xcpu2
+4		0.17		0.26
+8		0.23		0.29
+16		0.39		0.46
+32		0.61		0.85
+64		1.18		1.51
+91		1.63		2.07

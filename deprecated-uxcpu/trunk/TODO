@@ -1,0 +1,21 @@
+ - test with v9fs
+ + test copying directory
+ + test local exec
+ + test arguments with spaces
+ + test passing environment (and with special characters)
+ + test with small number of allowed file descriptors
+ - test with restricted memory
+ - make parallel writing to {env,argv,ctl} not use copy_* functions
+ + read the mountpoint addresses from /proc/mounts
+ + implement tspawn with v9fs
+ - use the local PATH to find out which file to copy
+ - implement support for multiple architectures in rx (including treespawn)
+ - figure out how to use the local PATH and support multiple architectures
+ - ^C on rx to kill the sessions
+ - make copy_*2file functions asynchronous (use libaio for Linux)
+ - discuss whether rx to copy the files symlinks point to, or create symlinks
+ - discuss support for multiple readers on {stdin,stdout,stderr}
+ - procs file 
+ + chown on clone to restrict the set of users that can create a session
+ - simple authentication (challenge-response)
+ - node enumeration library

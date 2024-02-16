@@ -1,0 +1,9 @@
+umount /mnt/xcpu/1/xcpu
+umount /mnt/xcpu/2/xcpu
+umount /mnt/xcpu/3/xcpu
+umount /mnt/xcpu/4/xcpu
+umount /mnt/xcpu/5/xcpu
+umount /mnt/xcpu/6/xcpu
+umount /mnt/xcpu/7/xcpu
+umount /mnt/xcpu/8/xcpu
+umount /mnt/xcpu/9/xcpu

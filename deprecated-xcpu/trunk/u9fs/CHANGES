@@ -1,0 +1,48 @@
+04/29/2005 - ericvh
+==========
+
+moved some fields around in stat structure to make it easier for p9p to accomodate
+
+03/19/2005 - ericvh
+==========
+
+Add support for device files, named pipes, and sockets
+Add support for hardlinks
+
+03/17/2005 - ericvh
+==========
+
+Fix open modes so we actually do append and truncate correctly.
+Code cleanup including better conditionalizing of 9p2000.u extensions.
+
+03/15/2005 - ericvh
+==========
+
+Fix some problems with the numeric uids being encoded in strings
+Add support for creation and reading of symlinks
+Disabled implicit following of symlinks in walks and stats
+Update README with requirements
+
+
+03/11/2005 - ericvh
+==========
+
+Add extended mode bit support (suid and sgid)
+
+03/03/2005 - ericvh
+==========
+
+Add first bits of 9P2000.u support
+NOTICE: Use an up-to-date v9fs or things will break
+
+
+01/19/2005 - ericvh
+==========
+
+Should work fine under both ppc and x86 now
+
+11/15/2004 - ericvh
+==========
+
+	o added .u negotiation to T_version
+	o uses numeric ids in .u mode 

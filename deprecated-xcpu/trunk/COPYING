@@ -1,0 +1,17 @@
+/* Most of this software is based on Plan 9 source code. The Lucent Public
+ * License applies in those cases. 
+ */
+/* Some of the changes were authored by employees of Los Alamos National Lab, 
+ * operated under Contract # W-7405-ENG-36 with the U.S.
+ * Department of Energy.  
+ * UC has not asserted copyright to the changes. This software
+ * is released under LA-CC-05-042.
+ */
+/* Portions independently written by others, and released under other 
+ * copyrights, are so marked in the source file. In most cases, those
+ * independent sources are released under the GPL. 
+ */
+/* the u9fs software, included herein in the u9fs directory, is released
+ * under the MIT license. 
+ */
+

@@ -1,0 +1,6 @@
+set term post eps enhan
+set yrange [0:7]
+set out "results3.eps"
+set xlabel "File size (MB)"
+set ylabel "seconds"
+plot "results3.data" using 1:4 title "no tree cache" with linespoints, "results3.data" using 1:5 title "tree cache" with linespoints

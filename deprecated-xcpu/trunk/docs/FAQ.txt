@@ -1,0 +1,63 @@
+Q: What is Xcpu?
+
+Q: What additional software is required with Xcpu?
+
+Q: How do I download and stay up to date with Xcpu?
+A: Download using subversion (a cvs replacement) from out xcpu.org
+repository:
+
+svn svn://xcpu.org/xcpu/trunk xcpu
+
+Q: How do I compile Xcpu?
+
+    cd xcpu
+    ./INSTALL # only if you don't have p9p, if you do then it'll just use
+              # whatever $PLAN9 is defined to, so skip this step
+    mk
+    mk install # puts everything in $PLAN9/bin
+
+Q: How do I run Xcpu?
+A: Run a server listening on localhost, port 20001:
+
+    xsrv 'tcp!127.0.0.1!20001'
+
+run a server listening to all networks, port 20001:
+
+    xsrv 'tcp!*!20001'
+
+run a single client (connecting directly over 9p):
+
+    9rx 127.1 /bin/date
+
+mount xsrv:
+
+    modprobe 9p2000
+    for i in `seq 1 10`; do mkdir -p /mnt/xcpu/$i/xcpu; done
+    mount -t 9P -o port=20001 127.0.0.1 /mnt/xcpu/1/xcpu
+    rx 1 /bin/date
+
+rx takes a regular expression for the list of nodes to run the command on,
+while 9rx takes a list of comma separated P9 dial strings:
+
+    # mount the same server 10 times
+    for i in `seq 1 10`; do mount -t 9P -o port=20001 127.0.0.1
+    /mnt/xcpu/$i/xcpu; done
+    # run date on 9 of the 10 nodes
+    rx [1-9] /bin/date
+
+    # run date with -n on the same xcpu server twice, over 9p, show GMT
+    9rx 127.1,127.1 /bin/date -u
+
+if you have 'rx' on your system already (some linux distributions come with
+an useless outdated command called rx) just use ./o.rx instead from the
+main xcpu directory
+
+Q: How do I specify binaries for different architectures?
+A: If you don't specify a binary starting with / then it'll cat the 'uname'
+file on the remote node and try to pick up a binary from `cat uname`/binary.
+for example, for linux, on x86_64, you can do "rx 1 bin/date", then it
+contacts the remote xcpu server, reads 'uname' which outputs /Linux/x86_64
+and tries to copy over a file from /Linux/x86_64/bin/date. this allows you
+to run different binaries on different systems at the same time.
+
+Q: How do I quote spaces in my commands

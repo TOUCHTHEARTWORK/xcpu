@@ -1,0 +1,29 @@
+<$PLAN9/src/mkhdr
+
+TARG=\
+	regress\
+	rx\
+	9rx\
+	9trx\
+	xcp\
+	xps\
+	xpfs\
+
+DIRS=libxcpuclient\
+	xsrv\
+	u9fs\
+
+CFLAGS=-Dp9p -Ilibxcpuclient
+
+<$PLAN9/src/mkdirs
+<$PLAN9/src/mkmany
+
+$O.rx: rx.$O libxcpuclient/libmntclient.a$O
+$O.9rx: 9rx.$O libxcpuclient/libninepclient.a$O
+$O.9trx: 9trx.$O libxcpuclient/libninepclient.a$O
+$O.xpfs: xpfs.$O libxcpuclient/libmntclient.a$O
+
+libxcpuclient/libmntclient.a$O:
+	cd libxcpuclient && mk 
+libxcpuclient/libninepclient.a$O:
+	cd libxcpuclient && mk 

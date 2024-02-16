@@ -1,0 +1,81 @@
+#!/bin/sh
+
+dobuild=true
+doinstall=true
+
+case "x$1" in
+x)
+	;;
+x-b)
+	dobuild=true
+	doinstall=false
+	;;
+x-c)
+	dobuild=false
+	doinstall=true
+	;;
+*)
+	echo 'usage: INSTALL [-b | -c]' 1>&2
+	exit 1
+esac
+
+PLAN9=`pwd` export PLAN9
+PATH=/bin:/usr/bin:$PLAN9/bin:$PATH export PATH
+
+echo "* Resetting $PLAN9/config"
+rm -f config
+
+(
+if [ `uname` = Linux ]; then
+	# On Linux, we use the kernel version to decide whether
+	# to use pthreads or not.  On 2.6 versions that aren't
+	# linking with NPTL by default, pretend to be an older kernel.
+	echo "* Running on Linux: checking for NPTL..."
+	gcc lib/linux-isnptl.c -lpthread
+	if ./a.out >/dev/null
+	then	
+		echo "	NPTL found."
+		echo "SYSVERSION=2.6.x" >$PLAN9/config
+	else
+		echo "	NPTL not found."
+		echo "SYSVERSION=2.4.x" >$PLAN9/config
+	fi
+	rm -f ./a.out
+fi
+
+if [ -f LOCAL.config ]; then
+	echo Using LOCAL.config options:
+	sed 's/^/	/' LOCAL.config
+	cat LOCAL.config >>config
+fi
+
+cd src
+if $dobuild; then
+	if [ ! -x ../bin/mk ]; then
+		echo "* Building mk..."
+		../bin/buildmk 2>&1 | sed 's/^[+] //'
+	fi
+	if [ ! -x ../bin/mk ]; then
+		echo "* Error: mk failed to build."
+		exit 1
+	fi
+	
+	echo "* Building everything (be patient)..."
+	mk clean
+	mk libs-nuke
+	mk all || exit 1
+	echo "* Installing everything in $PLAN9/bin..."
+	mk install || exit 1
+	echo "* Cleaning up..."
+	mk clean
+fi
+
+echo "* Done. "
+echo "	"
+echo "* Add these to your profile environment."
+echo "	PLAN9=$PLAN9 export PLAN9"
+echo '	PATH=$PATH:$PLAN9/bin export PATH'
+echo 'And type mk and mk install'
+
+) 2>&1 | tee install.log | awk -f $PLAN9/bin/isum.awk | tee install.sum
+

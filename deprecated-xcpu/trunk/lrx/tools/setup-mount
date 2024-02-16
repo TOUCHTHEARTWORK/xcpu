@@ -1,0 +1,5 @@
+mkdir -p /mnt/xcpu
+
+for i in `seq 1 9`; do
+            mkdir -p /mnt/xcpu/$i/xcpu
+done                                       

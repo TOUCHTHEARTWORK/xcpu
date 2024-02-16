@@ -1,0 +1,21 @@
+CODING STYLE
+
+Plan 9 C code has its own conventions. You would do well to follow them:
+
+no expanded tabs
+no white space before opening braces.
+no white space after the word "if", "for", "while", etc.
+no braces around single-line blocks (e.g., if, for, and while bodies).
+integer-valued functions return -1 on error, 0 or positive on success.
+functions that return errors should set errstr(2).
+variable and function names are all lowercase, with no underscores.
+enum or #defined constants should be Uppercase or UPPERCASE.
+struct tags are Uppercase, with matching typedefs.
+automatic variables (local variables inside a function) are never  initialized at declaration.
+follow the standard idioms: use x<0 not 0>x, etc.
+
+Ultimately, the goal is to write code that fits in with the other code
+around it and the system as a whole. If the file you are editing
+already deviates from these guidelines, do what it does. After you
+edit a file, a reader should not be able to tell just from coding
+style which parts you worked on.

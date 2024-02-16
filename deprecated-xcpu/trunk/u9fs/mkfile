@@ -1,0 +1,39 @@
+<$PLAN9/src/mkhdr
+
+CFLAGS=-c -I.
+CC=cc
+
+TARG=u9fs
+
+OFILES=\
+	io_std.$O\
+	authnone.$O\
+	authrhosts.$O\
+	authp9any.$O\
+	convD2M.$O\
+	convM2D.$O\
+	convM2S.$O\
+	convS2M.$O\
+	des.$O\
+	dirmodeconv.$O\
+	doprint.$O\
+	fcallconv.$O\
+	oldfcall.$O\
+	print.$O\
+	random.$O\
+	readn.$O\
+	remotehost.$O\
+	rune.$O\
+	safecpy.$O\
+	strecpy.$O\
+	tokenize.$O\
+	u9fs.$O\
+	utfrune.$O\
+
+HFILES=\
+	fcall.h\
+	plan9.h
+
+#BIN=u9fs
+
+<$PLAN9/src/mkmany

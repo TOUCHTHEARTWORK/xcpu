@@ -1,0 +1,9 @@
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/1/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/2/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/3/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/4/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/5/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/6/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/7/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/8/xcpu
+sudo  mount -t 9P -o noextend,port=20001 128.165.148.70 /mnt/xcpu/9/xcpu

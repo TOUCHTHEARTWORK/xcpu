@@ -1,0 +1,39 @@
+NAME
+	xgroupset - install group authentication information on xcpu(4) nodes
+SYNOPSIS
+	xgroupset {add|delete} {-a|nodes} groupname groupid [groupname groupid]+
+DESCRIPTION
+	Xcpu servers have no information at startup time about users and groups. It is first necessary
+	to install group information, then user information. 
+
+	Xgroupset installs group names and group ids on nodes running xcpufs. 
+	If the -a switch is used, xgroupset will contact statfs(1) and enumerate all nodes, 
+	then select for those that are up. 
+	The remote node where the job is to execute should be running xcpufs(4). Xgroupset will install
+	the name and group information on the set of nodes specified by "nodes", which should be given
+	in the xcpu(4) format. 
+
+
+OPTIONS
+	action		The action to be performed. i.e add or delete
+	nodes		A comma-separated list of nodes in the xcpu(4) format
+	groupname	Name of the group
+	groupid		Group ID (optional when deleting groups)
+
+EXAMPLE
+	This command will install group 'rminnich' as gid 599 on hosts n1 to n10 and n13:
+		
+		$ xgroupset add n[1-10],n13 rminnich 599
+		
+	To delete group 'rminnich' from node 13:
+
+	   	$ xgroupset delete n13 rminnich
+
+ENVIRONMENT
+
+SEE ALSO
+	xcpufs(4), statfs(4), xps(1), xstat(1), xk(1), xcpu(4), xuserset(1)
+BUGS
+	This should default to installing /etc/group if invoked with no arguments. 
+	The program does no checking for redundant group names/numbers. 
+

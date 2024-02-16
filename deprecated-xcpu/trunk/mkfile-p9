@@ -1,0 +1,21 @@
+</$objtype/mkfile
+
+TARG=\
+	rx\
+	xcp\
+	xps\
+
+HFILES=xcpusrv.h
+BIN=/$objtype/bin
+CFLAGS=-Ilibxcpuclient
+
+</sys/src/cmd/mkmany
+
+$O.xcpusrv: xcpusrv.$O msg.$O util.$O Plan9.$O #spawn-p9.$O
+$O.openclone: openclone.$O Plan9shell.$O
+$O.xsh: xsh.$O Plan9shell.$O
+$O.testcat: testcat.$O P9pshell.$O
+$O.rx: rx.$O libxcpuclient/libmntclient.a$O
+
+libxcpuclient/libmntclient.a$O:
+	cd libxcpuclient && mk 

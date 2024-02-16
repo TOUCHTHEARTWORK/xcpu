@@ -1,0 +1,155 @@
+Index: libnpclient/Makefile
+===================================================================
+--- libnpclient/Makefile	(revision 690)
++++ libnpclient/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/npfs.h ../include/npclient.h npcimpl.h
+ CFLAGS=-Wall -g -I ../include
+@@ -24,9 +25,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/npclient.h $(INSTALLPREFIX)/include
+-	cp libnpclient.a $(INSTALLPREFIX)/lib
++	cp libnpclient.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~
+Index: libnpfs/Makefile
+===================================================================
+--- libnpfs/Makefile	(revision 690)
++++ libnpfs/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/npfs.h npfsimpl.h
+ CFLAGS=-Wall -g -I../include -D$(SYSNAME)
+@@ -30,9 +31,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/npfs.h $(INSTALLPREFIX)/include
+-	cp libnpfs.a $(INSTALLPREFIX)/lib
++	cp libnpfs.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ 
+ clean:
+Index: libspclient/Makefile
+===================================================================
+--- libspclient/Makefile	(revision 690)
++++ libspclient/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/spfs.h ../include/spclient.h spcimpl.h
+ CFLAGS=-Wall -g -I ../include
+@@ -28,9 +29,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/spclient.h $(INSTALLPREFIX)/include
+-	cp libspclient.a $(INSTALLPREFIX)/lib
++	cp libspclient.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~
+Index: libspfs/Makefile
+===================================================================
+--- libspfs/Makefile	(revision 690)
++++ libspfs/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/spfs.h spfsimpl.h
+ CFLAGS=-Wall -g -I ../include -D$(SYSNAME)
+@@ -28,9 +29,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/spfs.h $(INSTALLPREFIX)/include
+-	cp libspfs.a $(INSTALLPREFIX)/lib
++	cp libspfs.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~ core.*
+Index: libstrutil/Makefile
+===================================================================
+--- libstrutil/Makefile	(revision 690)
++++ libstrutil/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/spfs.h ../include/strutil.h
+ CFLAGS=-Wall -g -I ../include
+@@ -15,9 +16,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/strutil.h $(INSTALLPREFIX)/include
+-	cp libstrutil.a $(INSTALLPREFIX)/lib
++	cp libstrutil.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~
+Index: libxauth/Makefile
+===================================================================
+--- libxauth/Makefile	(revision 690)
++++ libxauth/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ HFILES=../include/spfs.h ../include/libxauth.h
+ CFLAGS=-Wall -g -I ../include
+@@ -12,9 +13,9 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/libxauth.h $(INSTALLPREFIX)/include
+-	cp libxauth.a $(INSTALLPREFIX)/lib
++	cp libxauth.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~
+Index: libxcpu/Makefile
+===================================================================
+--- libxcpu/Makefile	(revision 690)
++++ libxcpu/Makefile	(working copy)
+@@ -1,4 +1,5 @@
+ SYSNAME:=${shell uname}
++MULTILIBPATH=${shell test -d /lib64 && echo lib64 || echo lib}
+ SYSNAME!=uname
+ LIBELFINC=/opt/local/include
+ HFILES=../include/libxcpu.h xcpuimpl.h ../include/xcpu.h
+@@ -24,10 +25,10 @@
+ 
+ install:
+ 	mkdir -p $(INSTALLPREFIX)/include
+-	mkdir -p $(INSTALLPREFIX)/lib
++	mkdir -p $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 	cp ../include/libxcpu.h $(INSTALLPREFIX)/include
+ 	cp ../include/xcpu.h $(INSTALLPREFIX)/include
+-	cp libxcpu.a $(INSTALLPREFIX)/lib
++	cp libxcpu.a $(INSTALLPREFIX)/$(MULTILIBPATH)
+ 
+ clean:
+ 	rm -f *.o *.a *~ core.*

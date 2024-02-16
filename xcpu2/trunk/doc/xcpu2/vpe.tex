@@ -1,0 +1,69 @@
+%
+% I realized that I may get flak for talking about this because it was vaguely
+% product, but never really materialized.  Fortunately the customer talked about it
+% http://www.prace-project.eu/hpc-training/prace-winter-school/Carteni_PRACE_WS.pdf
+% So we should probably cite that
+%
+
+
+\subsection{Virtual PowerXcell Environment (VPE) Hypernodes}
+
+Roadrunner~\cite{roadrunner}, the world's first petascale supercomputer, was 
+architected as a hybrid system composed of general purpose Opteron processors 
+with Cell-based accelerators.  
+Roadrunner's success led to interest in smaller scale and more loosely coupled
+hybrid clusters.
+The Virtual PowerXcell Environment (VPE) was the underlying runtime of a prototype
+hybrid blade cluster made up of hypernodes.  Each hypernode consisted of a Power 6 
+blade (JS22) acting as general purpose front-end to a number of back-end PowerXcell 
+blades (QS22) acting as compute accelerators connected over a high-performance 
+Infiniband network.
+
+The intent of the hypernode systems software environment was to maintain the
+illusion of a tightly coupled single system even though the applications were running 
+on a loosely coupled cluster.  In order to accomplish this we specially tagged hybrid 
+applications with a custom header identifying them as VPE executables.  
+We then built a custom binfmt~\cite{binfmt} module which would recognize the 
+VPE header and transparently reserve cluster resources using a workload scheduler 
+and use Xcpu2 to schedule the execution of the application on the remote node 
+using the front-end nodes environment and operating system.  With the console 
+redirected to the same terminal which initiated the execution, environment
+variables duplicated and signals forwarded, the user is unaware that the 
+application is even running on a remote system.  
+The nature of this execution model is such that there is a one-to-one correlation
+between the proxy application on the front-end node and the instance running on the
+back-end cluster node.  The implication is that we can't take much advantage of the
+treespawn or caching mechanisms provided by XCPU2 when fanning out computation to
+many back-end nodes.
+This transparent remote execution mechanism was originally developed as part of the 
+PROSE LibraryOS project~\cite{prose}~\cite{libra}.
+
+The hypernode file system environment was maintained by a GPFS~\cite{gpfs} cluster which
+was mounted on the front-end JS22 nodes.
+The PowerXcell blades were configured as diskless drone systems
+and booted with a minimal ramdisk containing only enough resources to establish
+themselves as Xcpu2 servers.  All application executables and data were obtained
+by the QS22s via the 9P connection to the JS22 front-end established by Xcpu2.
+This configuration had the effect of aggregating file system access by the QS22's 
+through the JS22 (in much the same way BlueGene compute nodes aggregate file
+access through their I/O nodes~\cite{bgp}) allowing a more simple configuration 
+environment,  and an extremely small systems software footprint on the QS22 nodes.
+
+One unforeseen complication of our transparent distributed execution model
+was in dealing with intelligent runtimes who optimize their communication
+based on thread location.  For example, when we ran MPI applications in a
+VPE environment we could convince MPI to start extra threads to be scheduled
+on the remote nodes, but since it thought those threads were running locally it
+would try to use shared memory for communication between them.  Since
+memory is not one of the resources shared between front-end and back-end nodes
+this caused our naive configuration of the MPI application to fail.  With some
+effort we were able to identify an MPI library version and configuration which
+would allow us to override the shared memory communication optimizations.
+
+Another issue we had was trying to do proper resource allocation of the back-end
+accelerators.  Each QS22 PowerXcell blade had 16 synergistic processing units~\cite{ibm-cell}
+(SPUs) which applications could use.  Because these accelerator resources were not
+accounted for via the Xcpu2 file server, we had no integrated mechanism to monitor
+or reserve SPUs for a particular applications and had to resort to a third-party resource 
+reservation system which the applications had to interact with directly.  We will discuss
+some ideas of how to address this in the future work section.

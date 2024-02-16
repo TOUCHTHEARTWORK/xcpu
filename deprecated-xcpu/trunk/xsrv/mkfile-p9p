@@ -1,0 +1,11 @@
+<$PLAN9/src/mkhdr
+
+CFLAGS=-Dp9p
+
+TARG=xsrv
+
+HFILES=xsrv.h
+
+<$PLAN9/src/mkmany
+
+$O.xsrv: xsrv.$O P9p.$O $SYSNAME.$O queue.$O

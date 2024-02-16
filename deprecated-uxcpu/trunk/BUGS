@@ -1,0 +1,2 @@
+- xcpufs (or rx) hangs sometmes
+- no support for tspawn with v9fs

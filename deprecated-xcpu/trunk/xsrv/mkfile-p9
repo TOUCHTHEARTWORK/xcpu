@@ -1,0 +1,10 @@
+</$objtype/mkfile
+
+TARG=xsrv\
+
+HFILES=xsrv.h
+BIN=/$objtype/bin
+
+</sys/src/cmd/mkmany
+
+$O.xsrv: xsrv.$O Plan9.$O queue.$O

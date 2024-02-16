@@ -1,0 +1,11 @@
+# xcpu2 with and without treespawn on 256 nodes (4x64 nodes)
+# tree-spawn with 8 children per node
+#
+# File size	xcpu2 flat	xcpu2 -n8
+2.18	       	5.825		4.523
+2.43		6.153		4.558
+2.93		6.817		4.604
+3.93		8.066		4.735
+5.93		10.779		5.048
+9.94		15.799		5.852
+17.96		25.773		7.949

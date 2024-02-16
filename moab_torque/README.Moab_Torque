@@ -1,0 +1,203 @@
+                            XCPU With Torque and Moab
+		    	 
+XCPU can now be used by Moab and Torque to launch jobs.  To integrate XCPU with
+Moab and Torque, you need to modify the configuration files of Torque and Moab 
+and copy the scripts in this directory to the appropriate locations.  The sections 
+below will explain what needs to be done.
+
+We would like to thank ClusterResources for helping us integrate XCPU with 
+Torque and Moab.  Most of the scripts in this directory were written by 
+ClusterResources and graciously contributed to XCPU.  Modifications to the original 
+ClusterResources scripts and the new scripts created were written by Hugh Greenberg.
+
+************
+Overall Setup
+************
+
+These scripts were written with the intention of having one head node.  This
+head node will require the following: moab, a pbs_server daemon, a pbs_mom daemon, 
+and a statfs daemon.  The slave nodes only need to be running xcpufs.
+The instructions below describe how to install Moab and Torque so they will work with 
+XCPU.  They are not complete Moab and Torque installation instructions.  For 
+additional information, please consult the Moab and Torque documentation.
+
+************
+Torque
+************
+
+1.  Make sure you have Torque version 2.3.0-snap.200802251457 or later.  A special 
+option, the $preexec option, was implemented in this snapshot and is needed for XCPU
+to be launched from Torque.
+
+2.  Torque needs to have been built with the following configure option:  
+--enable-shell-use-argv.  If it wasn't built with this option, you need to recompile
+Torque with this option enabled.  I find that this option causes the compilation to fail
+due to warnings.  Use the --disable-gcc-warnings configure option so it compiles.
+
+3.  There only needs to be one pbs_mom running on the head node(s).  Since there is 
+only one pbs_mom running, Torque needs to be aware of the number of nodes in your 
+cluster, otherwise job submission will fail if the user requests more than one node.  
+To make Torque aware of the number of nodes in your cluster, execute qmgr and enter 
+something like the following on the qmgr command prompt:
+
+Qmgr: s s resources_available.nodect = 91
+Qmgr: s q batch resources_available.nodect=91
+
+This sets my total available nodes to 91 and the nodes available to the batch queue are 
+also set to 91.  You will need to change these lines according to your cluster size and 
+your queue configuration.
+
+4.  Edit $TORQUE_SPOOL/server_priv/nodes.  You need to have only one line that 
+contains the hostname of this headnode followed by np=x, where x is the 
+number of processors available in the whole cluster.  For example:
+
+headnode_hostname np=182
+
+5.  Now edit the file $TORQUE_SPOOL/mom_priv/config.  For me, $TORQUE_SPOOL is 
+/var/spool/torque, but may be different your system.  In this file, add the following 
+line:
+
+$preexec /opt/moab/tools/xcpu-torque-wrapper.sh
+
+This script does not have to be located in /opt/moab/tools, but I recommend that you 
+place all the scripts in the Moab tools directory, which is /opt/moab/tools in this case.
+
+6.  Restart your pbs_server and pbs_mom.
+
+
+************
+Moab
+************
+
+1.  Install Moab like this: ./configure --with-torque 
+--prefix=/opt/moab --with-homedir=/opt/moab; make; make install.
+
+2.  Copy all of the files in the sxcpu/moab_torque/ directory, except for the 
+README.Moab_Torque file, to the Moab tools directory.  If your moab 
+tools directory is not /opt/moab/tools or you don't want to put job.launch.xcpu.pl there,
+you need to edit xcpu-torque.wrapper.sh so it executes job.launch.xcpu.pl in the proper 
+location.  xcpu-torque.wrapper.sh and job.launch.xcpu.pl both need to have their 
+permissions set to 755 as they are executed by the user that submitted a job.  The other 
+scripts should be executable by the user running Moab.
+
+3. Edit config.xcpu.pl, which you just copied.  This file specifies the locations of 
+several binaries that are needed and a few options. Below is an explanation of each
+option:
+
+$ENV{PATH} - The path the scripts use to find the binaries below.
+
+The binaries needed; full paths are not necessary if the full paths are in the PATH
+environment variable:
+$xstat    = 'xstat';
+$xrx      = 'xrx';
+$xk       = 'xk';
+$qstat    = 'qstat';
+$pbsnodes = 'pbsnodes';
+$qrun     = 'qrun';
+
+$processorsPerNode specifies the number of processors in each node and is used for 
+determining how many jobs to run on each node.  If $processorsPerNode is set to 2, then 
+2 jobs will be run on that node.
+
+$memoryPerNode and $swapPerNode are not actually used by these scripts to make decisions 
+when determining which node to run on.  
+
+If $populateNodeClassesFromTorque is anything other than 0, Torque's queues that are 
+execution queues and are running will be associated with each node.
+ 
+If $logLevel is anything greater than or equal to 1, logging for all scripts will be 
+enabled.  The logsare available in $MOAB_HOME/log.
+
+The $monitor option is the script that monitors the cluster and writes to the node spool.
+This should not be changed unless you changed the location of the script to be something
+other than the Moab Tools directory.
+
+The $nodeSpool specifies which file to write node status information to.  The default
+will most likely be fine.
+
+The $pollInterval option specifies how often the monitor script, __mon.xcpu.pl, should 
+be run to collect information about the nodes.
+
+The $nodes option specifies how many nodes to use if the user did not specify the number 
+of nodes in the torque batch script.
+
+
+4.  job.launch.xcpu.pl has the ability to log if the loglevel configuration option in 
+config.xcpu.pl is set to anything greater than or equal 1. The file that it logs to is: 
+$MOAB_HOME/log/job.launch.log .  In order for that file to be written
+to, it has to be writeable by the user submitting the job. So, you will need
+to create this file manually and then change the permissions first before you start 
+testing since the user you are testing with will most likely not have write access to 
+the log directory.
+
+5.  Edit your moab.cfg, which for me is located in /opt/moab/moab.cfg.  The only part
+you need to change is the Resource Manager configuration.  Mine looks like this:
+
+# Resource Manager configuration
+RMCFG[pinkish]            TYPE=NATIVE FLAGS=FULLCP
+RMCFG[pinkish]            CLUSTERQUERYURL=exec:///$TOOLSDIR/node.query.xcpu.pl
+RMCFG[pinkish]            WORKLOADQUERYURL=exec:///$TOOLSDIR/job.query.xcpu.pl
+RMCFG[pinkish]            JOBSTARTURL=exec:///$TOOLSDIR/job.start.xcpu.pl
+RMCFG[pinkish]            JOBCANCELURL=exec:///$TOOLSDIR/job.cancel.xcpu.pl
+
+6.  Restart Moab. 
+
+
+************
+Testing
+************
+
+If things are working correctly, Moab should be showing you the correct number of 
+processors and nodes with the "showq" command.
+
+Try submitting a test job with qsub like this:
+
+qsub script.cmd
+
+The script.cmd could contain something like this:
+
+#!/bin/bash
+#PBS -l nodes=7
+#XCPU -p
+
+hostname
+
+
+This will run hostname on 7 processors.  The output will be put in the directory
+where you executed qsub and in the files script.cmd.ojobnum and script.cmd.ejobnum.  
+
+
+************************
+Features And Limitations  
+************************
+
+The script job.launch.xcpu.pl has to parse the script that the user submits to qsub.  
+Currently, it supports one Torque option, bash and csh style environment variables 
+regardless of the user's shell, the execution of other commands besides the command to 
+execute on the cluster, and it supports one xrx option.  
+That isn't to say that Torque ignores the entire script.  Torque still handles other 
+options such as the -e and -o options.
+
+The only Torque option that the job.launch.xcpu.pl script handles is the nodes= option.
+This is shown in the example above.  There needs to be a line in the user's script
+that looks like this:
+
+#PBS -l nodes=x
+
+Where x is the number nodes to run on.  Any other options on that same line or a line 
+that starts with #PBS will be ignored by the script, but will most likely be handled by 
+Torque.
+
+Currently, the job.launch.xcpu.pl supports one option for xcpu related commands.  This
+option is xrx's -p option, which tells xrx to prepend the output with the hostname
+that it came from.  To specify this option, there needs to be a line in the user's 
+script that looks like this:
+
+#XCPU -p
+
+Any other options in that line or a different line that starts with #XCPU and has other
+options besides the -p will be ignored by the script. 
+
+
+
+Written by Hugh Greenberg <hng@lanl.gov>
